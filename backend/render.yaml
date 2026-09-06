@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: visionaryx-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: MONGO_URI
+        sync: false          # paste your MongoDB Atlas connection string in the Render dashboard
+      - key: MONGO_DB_NAME
+        value: visionaryx
+      - key: JWT_SECRET_KEY
+        generateValue: true  # Render generates a random secret for you
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      - key: EMAIL_BACKEND
+        value: console        # switch to smtp + fill SMTP_* once you have real email credentials
+      - key: FRONTEND_ORIGIN
+        sync: false          # set this to your Vercel URL, e.g. https://visionaryx.vercel.app
+      - key: LLM_PROVIDER
+        value: ""
+      - key: LLM_API_KEY
+        sync: false
