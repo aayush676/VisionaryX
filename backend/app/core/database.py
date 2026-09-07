@@ -1,3 +1,4 @@
+import certifi
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from app.core.config import get_settings
@@ -10,7 +11,11 @@ _client: AsyncIOMotorClient | None = None
 def get_client() -> AsyncIOMotorClient:
     global _client
     if _client is None:
-        _client = AsyncIOMotorClient(settings.mongo_uri)
+        # Force certifi's up-to-date CA bundle. Some cloud hosts (Render's
+        # Python build included) ship an outdated/mismatched system CA store
+        # that fails TLS negotiation against MongoDB Atlas with a bare
+        # "TLSV1_ALERT_INTERNAL_ERROR" rather than a clear certificate error.
+        _client = AsyncIOMotorClient(settings.mongo_uri, tlsCAFile=certifi.where())
     return _client
 
 
