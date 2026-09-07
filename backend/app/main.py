@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -28,7 +29,14 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await ensure_indexes()
+    # Index creation must never block or fail startup: if Mongo is slow or
+    # briefly unreachable, the process should still bind its port and serve
+    # /health so the platform sees a live service and the failure surfaces as
+    # a request-time error instead of an unreachable, silently hanging app.
+    try:
+        await asyncio.wait_for(ensure_indexes(), timeout=15)
+    except Exception as exc:
+        print(f"WARNING: index setup skipped ({type(exc).__name__}: {exc})", flush=True)
     yield
     await close_database_connection()
 

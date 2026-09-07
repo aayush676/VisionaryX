@@ -15,7 +15,12 @@ def get_client() -> AsyncIOMotorClient:
         # Python build included) ship an outdated/mismatched system CA store
         # that fails TLS negotiation against MongoDB Atlas with a bare
         # "TLSV1_ALERT_INTERNAL_ERROR" rather than a clear certificate error.
-        _client = AsyncIOMotorClient(settings.mongo_uri, tlsCAFile=certifi.where())
+        _client = AsyncIOMotorClient(
+            settings.mongo_uri,
+            tlsCAFile=certifi.where(),
+            serverSelectionTimeoutMS=8000,
+            connectTimeoutMS=8000,
+        )
     return _client
 
 
