@@ -1,9 +1,4 @@
-import platform
-import ssl
-import sys
 from contextlib import asynccontextmanager
-
-print(f"[diagnostic] Python {sys.version} | OpenSSL: {ssl.OPENSSL_VERSION} | platform: {platform.platform()}", flush=True)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
