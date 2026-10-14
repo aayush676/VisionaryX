@@ -27,7 +27,7 @@ services:
       - key: EMAIL_BACKEND
         value: console        # switch to smtp + fill SMTP_* once you have real email credentials
       - key: FRONTEND_ORIGIN
-        sync: false          # set this to your Vercel URL, e.g. https://visionaryx.vercel.app
+        value: https://visionary-x-five.vercel.app
       - key: LLM_PROVIDER
         value: ""
       - key: LLM_API_KEY
