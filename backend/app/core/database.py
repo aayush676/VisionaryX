@@ -8,19 +8,32 @@ settings = get_settings()
 _client: AsyncIOMotorClient | None = None
 
 
+def _uses_tls(uri: str) -> bool:
+    """Whether `uri` describes a TLS connection.
+
+    `mongodb+srv://` implies TLS; a plain `mongodb://` only uses it when asked
+    to. This matters because passing `tlsCAFile` to the client *enables* TLS as
+    a side effect, so handing it to a local, non-TLS mongod makes every
+    connection die as "EOF occurred in violation of protocol".
+    """
+    lowered = uri.lower()
+    return lowered.startswith("mongodb+srv://") or "tls=true" in lowered or "ssl=true" in lowered
+
+
 def get_client() -> AsyncIOMotorClient:
     global _client
     if _client is None:
-        # Force certifi's up-to-date CA bundle. Some cloud hosts (Render's
-        # Python build included) ship an outdated/mismatched system CA store
-        # that fails TLS negotiation against MongoDB Atlas with a bare
-        # "TLSV1_ALERT_INTERNAL_ERROR" rather than a clear certificate error.
-        _client = AsyncIOMotorClient(
-            settings.mongo_uri,
-            tlsCAFile=certifi.where(),
-            serverSelectionTimeoutMS=8000,
-            connectTimeoutMS=8000,
-        )
+        options: dict = {
+            "serverSelectionTimeoutMS": 8000,
+            "connectTimeoutMS": 8000,
+        }
+        if _uses_tls(settings.mongo_uri):
+            # Force certifi's up-to-date CA bundle. Some cloud hosts (Render's
+            # Python build included) ship an outdated/mismatched system CA store
+            # that fails TLS negotiation against MongoDB Atlas with a bare
+            # "TLSV1_ALERT_INTERNAL_ERROR" rather than a clear certificate error.
+            options["tlsCAFile"] = certifi.where()
+        _client = AsyncIOMotorClient(settings.mongo_uri, **options)
     return _client
 
 
